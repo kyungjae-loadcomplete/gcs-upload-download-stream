@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -61,11 +62,11 @@ namespace Utilities.GCP
             {
                 if (_gcsBufferStream == null)
                     _gcsBufferStream = new MemoryStream(_gcsBuffer);
-                
-                
+
+
                 // https://cloud.google.com/storage/docs/samples/storage-download-byte-range#storage_download_byte_range-csharp
                 StorageService storage = _client.Service;
-                var uri = new Uri($"{storage.BaseUri}b/{_bucketName}/o/{_objectName}?alt=media");
+                var uri = new Uri($"{storage.BaseUri}b/{_bucketName}/o/{Uri.EscapeDataString(_objectName)}?alt=media");
                 using var request = new HttpRequestMessage { RequestUri = uri };
 
                 // range 0-99 = 100 bytes
@@ -78,6 +79,8 @@ namespace Utilities.GCP
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                 var response = storage.HttpClient.Send(request);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    throw new FileNotFoundException();
 
                 _gcsBufferStream.Position = 0;
                 response.Content.CopyToAsync(_gcsBufferStream, null).GetAwaiter().GetResult();

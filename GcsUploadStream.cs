@@ -32,17 +32,17 @@ namespace Utilities.GCP
         Metadata _metadata = new Metadata();
         StorageClient _client = null;
 
-        public GcsUploadStream(StorageClient client, string gsUri, string contentType = "application/octet-stream", long preferredChunkSize = PREFERRED_CHUNK_SIZE)
-            : this(client, new Uri(gsUri), contentType, preferredChunkSize)
+        public GcsUploadStream(StorageClient client, string gsUri, long preferredChunkSize = PREFERRED_CHUNK_SIZE, string contentType = "application/octet-stream")
+            : this(client, new Uri(gsUri), preferredChunkSize, contentType)
         {
         }
 
-        public GcsUploadStream(StorageClient client, Uri gsUri, string contentType = "application/octet-stream", long preferredChunkSize = PREFERRED_CHUNK_SIZE)
-            : this (client, gsUri.Host, gsUri.LocalPath.Substring(1), contentType, preferredChunkSize)
+        public GcsUploadStream(StorageClient client, Uri gsUri, long preferredChunkSize = PREFERRED_CHUNK_SIZE, string contentType = "application/octet-stream")
+            : this(client, gsUri.Host, gsUri.LocalPath.Substring(1), preferredChunkSize, contentType)
         {
         }
 
-        public GcsUploadStream(StorageClient client, string bucket, string objectName, string contentType = "application/octet-stream", long preferredChunkSize = PREFERRED_CHUNK_SIZE)
+        public GcsUploadStream(StorageClient client, string bucket, string objectName, long preferredChunkSize = PREFERRED_CHUNK_SIZE, string contentType = "application/octet-stream")
             : this(client, new Google.Apis.Storage.v1.Data.Object
             {
                 Bucket = bucket,
@@ -78,7 +78,7 @@ namespace Utilities.GCP
             _metadata = null;
             base.Dispose(disposing);
         }
-    
+
         public override bool CanRead => false;
         public override bool CanSeek => false;
         public override bool CanWrite => true;
@@ -100,7 +100,8 @@ namespace Utilities.GCP
 
         private void StartNewPart()
         {
-            if (_metadata.CurrentStream != null) {
+            if (_metadata.CurrentStream != null)
+            {
                 Flush(false);
             }
 #if GCP_UPLOAD_STREAM_NON_ASYNC
@@ -128,7 +129,7 @@ namespace Utilities.GCP
                         ChunkSize = _metadata.ChunkSize
                     }).GetAwaiter().GetResult();
             }
-            
+
             if (_metadata.CurrentStream != null)
             {
                 var prevGcsPosition = _metadata.BytesSentToGcpSoFar;
